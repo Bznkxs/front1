@@ -488,9 +488,32 @@ class LabelImage {
 
 	//----监听画板鼠标点击
 	CanvasMouseDown = (e) => {
+
 		console.log("Canvas Mouse Down")
 		let _nodes = this.Nodes;
 		let _arrays = this.Arrays;
+		let enterDragMode = () => {
+			let resultList = this.Nodes.resultGroup.getElementsByClassName("result_list");
+			let prevP = this.CalculateChange(e, _nodes.canvas);
+			this.prevX = prevP.x;
+			this.prevY = prevP.y;
+			this.dragRectMask = null;
+			for (let i in _arrays.imageAnnotateShower) {
+				if (inRect(prevP.x, prevP.y, _arrays.imageAnnotateShower[i].rectMask)) {
+					for (let j=0; j<resultList.length; j++) {
+						resultList[j].classList.remove('active');
+					}
+					resultList[i].classList.add('active');
+					this.Arrays.selectIndex = +i;
+					// console.log("star", i)
+					this.DrawSavedAnnotateInfoToShow(+i + 1);
+					this.dragRectMask = +i;
+					break;
+				}
+			}
+			_nodes.canvas.addEventListener('mousemove', this.ImageDrag);
+			_nodes.canvas.addEventListener('mouseup', this.RemoveImageDrag);
+		}
 		this.GetMouseInCanvasLocation(e);
 		if (e.button === 0) {
 			this.isDragCircle = false;
@@ -522,32 +545,7 @@ class LabelImage {
 			if (!this.isDragCircle){
 				if (this.Features.dragOn) {
 					// 是否开启拖拽模式
-					let resultList = this.Nodes.resultGroup.getElementsByClassName("result_list");
-					let prevP = this.CalculateChange(e, _nodes.canvas);
-					this.prevX = prevP.x;
-					this.prevY = prevP.y;
-					this.dragRectMask = null;
-					for (let i in _arrays.imageAnnotateShower) {
-						if (inRect(prevP.x, prevP.y, _arrays.imageAnnotateShower[i].rectMask)) {
-							for (let j=0; j<resultList.length; j++) {
-								resultList[j].classList.remove('active');
-							}
-							resultList[i].classList.add('active');
-							this.Arrays.selectIndex = +i;
-							// console.log("star", i)
-							this.DrawSavedAnnotateInfoToShow(+i + 1);
-							this.dragRectMask = +i;
-							break;
-						}
-					}
-					if (this.dragRectMask != null){
-						_nodes.canvas.addEventListener('mousemove', this.ImageDrag);
-						_nodes.canvas.addEventListener('mouseup', this.RemoveImageDrag);
-					} else {
-						_nodes.canvas.addEventListener('mousemove', this.ImageDrag);
-						_nodes.canvas.addEventListener('mouseup', this.RemoveImageDrag);
-					}
-
+					enterDragMode();
 				}
 				else if (this.Features.rectOn) {
 					// 是否开启绘制矩形功能
@@ -594,11 +592,7 @@ class LabelImage {
 		}
 		else if (e.button === 2) {
 			// 长按右击直接开启拖拽模式
-			let prevP = this.CalculateChange(e, _nodes.canvas);
-			this.prevX = prevP.x;
-			this.prevY = prevP.y;
-			_nodes.canvas.addEventListener('mousemove', this.ImageDrag);
-			_nodes.canvas.addEventListener('mouseup', this.RemoveImageDrag);
+			enterDragMode();
 		}
 	};
 

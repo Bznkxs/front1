@@ -210,6 +210,31 @@ function initImage() {
 	// selectImage(0);
 }
 
+// 获取下一张图片
+let getNextImage = function() {
+	//annotate.Arrays.imageAnnotateMemory.length > 0 &&
+	setStorage(taskName.textContent, JSON.stringify(annotate.Arrays.imageAnnotateMemory));  // 保存已标定的图片信息
+	console.log("next Btn");
+	selectImage(imgIndex + 1);
+}
+
+nextBtn.onclick = getNextImage;
+
+let getPrevImage = function() {
+	//annotate.Arrays.imageAnnotateMemory.length > 0 &&
+	setStorage(taskName.textContent, JSON.stringify(annotate.Arrays.imageAnnotateMemory));  // 保存已标定的图片信息
+	console.log("prev Btn");
+	if (imgIndex === 0) {
+		selectImage(imgSum() - 1);
+	}
+	else {
+		selectImage(imgIndex - 1);
+	}
+}
+
+// 获取上一张图片
+prevBtn.onclick = getPrevImage;
+
 //切换操作选项卡
 let tool = document.getElementById('tools');
 tool.addEventListener('click', function(e) {
@@ -260,33 +285,19 @@ document.addEventListener('keydown', ev => {
 			annotate.DeleteSomeResultLabel(annotate.Arrays.selectIndex);
 		}
 	}
-	if (ev.ctrlKey && ev.key === 's') {
+	if (ev.ctrlKey && (ev.key === 's' || ev.key === 'S')) {
 		uploadImage();
 		ev.preventDefault();
+	}
+	if (ev.key === 'w' || ev.key === 'W') {
+		getNextImage();
+	}
+	if (ev.key === 'q' || ev.key === 'Q') {
+		getPrevImage();
 	}
 	console.log(ev.key);
 })
 
-// 获取下一张图片
-nextBtn.onclick = function() {
-	//annotate.Arrays.imageAnnotateMemory.length > 0 &&
-	setStorage(taskName.textContent, JSON.stringify(annotate.Arrays.imageAnnotateMemory));  // 保存已标定的图片信息
-	console.log("next Btn");
-	selectImage(imgIndex + 1);
-};
-
-// 获取上一张图片
-prevBtn.onclick = function() {
-	//annotate.Arrays.imageAnnotateMemory.length > 0 &&
-	setStorage(taskName.textContent, JSON.stringify(annotate.Arrays.imageAnnotateMemory));  // 保存已标定的图片信息
-	console.log("prev Btn");
-	if (imgIndex === 0) {
-		selectImage(imgSum() - 1);
-	}
-	else {
-		selectImage(imgIndex - 1);
-	}
-};
 
 // document.querySelector('.openFolder').addEventListener('click', function() {
 // 	document.querySelector('.openFolderInput').click()
