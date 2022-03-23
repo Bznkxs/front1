@@ -19,11 +19,11 @@ class LabelImage {
 		// 图片拖拽至边缘最小显示
 		this.appearSize = 180;
 		// 缩放布进
-		this.scaleStep = 0.02;
+		this.scaleStep = 0.08;
 		// 最小缩放比例
-		this.minScale = 0.2;
+		this.minScale = 0.05;
 		// 最大缩放比例
-		this.maxScale = 8;
+		this.maxScale = 20;
 		// 图片在画板中的横坐标
 		this.x = 0;
 		// 图片在画板中的纵坐标
@@ -96,11 +96,15 @@ class LabelImage {
 			selectIndex: 0,
 
 		};
+
+		this._markIndices = undefined;
+
 		this.Nodes = {
 			// 图片节点
 			image: null,
 			// 画布节点
 			canvas: options.canvas,
+			canvasContent: options.canvasContent,
 			// 缩略图节点
 			scaleCanvas: options.scaleCanvas,
 			// 缩放比例面板
@@ -177,13 +181,17 @@ class LabelImage {
 		_nodes.screenFull.addEventListener('click', this.IsScreenFull);
 		_nodes.recover.addEventListener('click', this.recover);
 		_nodes.historyGroup.addEventListener('click', this.HistoryClick);
+		window.addEventListener('resize', this.ScreenViewChange);
 		document.addEventListener('fullscreenchange', this.ScreenViewChange);
 		document.addEventListener('webkitfullscreenchange', this.ScreenViewChange);
 		document.addEventListener('mozfullscreenchange', this.ScreenViewChange);
 		document.addEventListener('msfullscreenchange', this.ScreenViewChange);
 		_nodes.canvas.addEventListener('mousemove', this.CanvasMouseMove);
 		_nodes.resultGroup.addEventListener('mouseover', this.ResultListOperation);
-		_nodes.toolTagsManager.addEventListener('click', this.ManageLabels)
+		if (_nodes.toolTagsManager) {
+			_nodes.toolTagsManager.addEventListener('click', this.ManageLabels)
+		}
+
 	};
 
 	//----设置图片并初始化画板信息
@@ -254,7 +262,9 @@ class LabelImage {
 			}
 			let initImgX = (this.cWidth - this.iWidth * this.scale) / 2;
 			let initImgY = (this.cHeight - this.iHeight * this.scale) / 2;
+
 			this.SetXY(initImgX, initImgY);
+
 
 
 			this.historyIndex = 0;
@@ -308,13 +318,51 @@ class LabelImage {
 	};
 
 	//----更新画板数据, 将存储面板数据绘制到展示面板已经缩略图面板
-	UpdateCanvas = () => {
-		let _nodes = this.Nodes;
-		_nodes.ctx.clearRect(0, 0, this.cWidth, this.cHeight);
-		_nodes.sCtx.clearRect(0, 0, this.sWidth, this.sWidth * this.iHeight / this.iHeight);
+	UpdateCanvas = (scaled=true) => {
 
-		_nodes.ctx.drawImage(_nodes.bCanvas, -this.x/this.scale, -this.y/this.scale, this.cWidth/this.scale, this.cHeight/this.scale, 0, 0, this.cWidth, this.cHeight);
-		_nodes.sCtx.drawImage(_nodes.bCanvas, 0, 0, this.iWidth, this.iHeight, 0, 0, this.sWidth, this.sHeight);
+		let _nodes = this.Nodes;
+		console.log("H,W", this.cHeight, this.cWidth, _nodes.canvas.offsetHeight, _nodes.canvas.offsetWidth, _nodes.canvas.height, _nodes.canvas.width)
+		_nodes.ctx.clearRect(0, 0, this.cWidth, this.cHeight);
+
+		// console.log("Height", this.cHeight);
+		// console.log(this.x, this.y, this.iWidth * this.scale, this.iHeight * this.scale, '', this.iWidth, this.iHeight)
+
+		_nodes.ctx.drawImage(_nodes.bCanvas, 0, 0, this.iWidth, this.iHeight,
+			this.x, this.y, this.iWidth * this.scale, this.iHeight * this.scale);
+
+				_nodes.ctx.setLineDash([6, 3]);
+		_nodes.ctx.lineWidth = 1;
+		_nodes.ctx.strokeStyle = "#ff0000";
+		_nodes.ctx.beginPath();
+		// 横线
+		_nodes.ctx.moveTo(0, this.y);
+		_nodes.ctx.lineTo(this.cWidth, this.y);
+		_nodes.ctx.stroke();
+		// 纵线
+		_nodes.ctx.moveTo(this.x, 0);
+		_nodes.ctx.lineTo(this.x, this.cHeight);
+		_nodes.ctx.stroke();
+		_nodes.ctx.closePath();
+
+		_nodes.ctx.strokeStyle = "#00ff00";
+		_nodes.ctx.beginPath();
+		// 横线
+		_nodes.ctx.moveTo(0, this.y + this.iHeight * this.scale);
+		_nodes.ctx.lineTo(this.cWidth, this.y + this.iHeight * this.scale);
+		_nodes.ctx.stroke();
+		// 纵线
+		_nodes.ctx.moveTo(this.x + this.iWidth * this.scale, 0);
+		_nodes.ctx.lineTo(this.x + this.iWidth * this.scale, this.cHeight);
+		_nodes.ctx.stroke();
+		_nodes.ctx.closePath();
+
+		if (scaled === false)
+			return;
+		console.log("scaled")
+		_nodes.sCtx.clearRect(0, 0, this.sWidth, this.sWidth * this.iHeight / this.iHeight);
+		_nodes.sCtx.drawImage(_nodes.image, 0, 0, this.sWidth, this.sHeight);
+
+
 
 		// 将缩略图方框区域绘制到画布
 		let width = this.sWidth * this.cWidth / this.iWidth / this.scale;
@@ -418,7 +466,7 @@ class LabelImage {
 					// 改变圆点颜色动画
 					if (distanceFromCenter <= this.radius){
 						_nodes.canvas.style.cursor = "grabbing";
-						this.DrawSavedAnnotateInfoToShow(_arrays.selectIndex + 1);
+						this.DrawSavedAnnotateInfoToShow(_arrays.selectIndex + 1, true);
 						return;
 					}
 					else {
@@ -431,11 +479,11 @@ class LabelImage {
 		for (let i in _arrays.imageAnnotateShower) {
 			if (inRect(prevP.x, prevP.y, _arrays.imageAnnotateShower[i].rectMask)) {
 				// console.log("star", i)
-				this.DrawSavedAnnotateInfoToShow(+i + 1);
+				this.DrawSavedAnnotateInfoToShow(+i + 1, true);
 				return;
 			}
 		}
-		this.DrawSavedAnnotateInfoToShow();
+		this.DrawSavedAnnotateInfoToShow(undefined, true);
 	};
 
 	//----监听画板鼠标点击
@@ -592,14 +640,14 @@ class LabelImage {
 	};
 
 	//----绘制圆点的方法
-	DrawCircle = (ctx, x, y, color) => {
+	DrawCircle = (ctx, x, y, color, scale=1) => {
 		ctx.beginPath();
 		ctx.fillStyle = "#000";
-		ctx.arc(x, y, this.radius, 0, 2*Math.PI);
+		ctx.arc(x, y, this.radius /scale, 0, 2*Math.PI);
 		ctx.fill();
 		ctx.beginPath();
 		ctx.fillStyle = color;
-		ctx.arc(x, y, this.radius/3, 0, 2*Math.PI);
+		ctx.arc(x, y, this.radius/scale/3, 0, 2*Math.PI);
 		ctx.fill();
 	};
 
@@ -614,11 +662,22 @@ class LabelImage {
 	};
 
 	//----绘制已保存的标定信息（在数据操作更新时渲染）绘至数据展示画板
-	DrawSavedAnnotateInfoToShow = (enterIndex) => {
+	DrawSavedAnnotateInfoToShow = (enterIndex, mouseMoveOnly=false) => {
 		let _arrays = this.Arrays;
 		let _nodes = this.Nodes;
-		_nodes.ctx.clearRect(0, 0, this.cWidth, this.cHeight);
-		_nodes.ctx.drawImage(_nodes.bCanvas, -this.x/this.scale, -this.y/this.scale, this.cWidth/this.scale, this.cHeight/this.scale, 0, 0, this.cWidth, this.cHeight);
+		if (mouseMoveOnly === true) {
+			if (this._markIndices !== undefined) {
+				if (this._markIndices.selectIndex === _arrays.selectIndex) {
+					if (enterIndex && this._markIndices.enterIndex === enterIndex ||
+						(!enterIndex && !this._markIndices.enterIndex)) {
+						return;
+					}
+				}
+			}
+		}
+		this._markIndices = {selectIndex: _arrays.selectIndex, enterIndex};
+
+		this.UpdateCanvas(false);
 		_nodes.ctx.setLineDash([0,0]);
 		// console.log("draw: selectIndex", enterIndex, _arrays.selectIndex)
 		_arrays.imageAnnotateShower.forEach((item, index) => {
@@ -684,12 +743,14 @@ class LabelImage {
 					_nodes.bCtx.stroke();
 				}
 				else if (item.contentType === "rect") {
-					this.DrawRect(_nodes.bCtx, item.rectMask.xMin, item.rectMask.yMin, item.rectMask.width, item.rectMask.height, item.labels.labelColor, item.labels.labelColorRGB);
+					_nodes.bCtx.lineWidth = this.lineWidth / this.scale;
+					this.DrawRect(_nodes.bCtx, item.rectMask.xMin, item.rectMask.yMin, item.rectMask.width, item.rectMask.height,
+						item.labels.labelColor, item.labels.labelColorRGB);
 				}
 				if (_arrays.selectIndex !== -1 && _arrays.selectIndex === index) {
 					item.content.forEach((circle) => {
 						// 绘制圆点
-						this.DrawCircle(_nodes.bCtx, circle.x, circle.y, "#20c3f9");
+						this.DrawCircle(_nodes.bCtx, circle.x, circle.y, "#20c3f9", this.scale);
 					});
 				}
 				if (item.content.length >= 2 && item.labels.visibility) {
@@ -697,9 +758,12 @@ class LabelImage {
 					this.DrawRectLabel(_nodes.bCtx, item.labelLocation.x, item.labelLocation.y, item.labels.labelColor, item.labels.labelName, index + 1);
 				}
 			});
+			this.UpdateCanvas(false);
 		}
-		this.UpdateCanvas();
-		!isRender && this.DrawSavedAnnotateInfoToShow();
+		else {
+			this.DrawSavedAnnotateInfoToShow();
+		}
+
 
 	};
 
@@ -766,6 +830,9 @@ class LabelImage {
 		this.drawFlag = true;
 		this.Nodes.canvas.removeEventListener('mousemove', this.ImageDrag);
 		this.Nodes.canvas.removeEventListener('mouseup', this.RemoveImageDrag);
+		if (this.dragRectMask != null) {
+			uploadImage(false);
+		}
 	};
 
 	//----鼠标移动绘制矩形事件
@@ -838,6 +905,7 @@ class LabelImage {
 		this.Nodes.canvas.removeEventListener('mouseup', this.RemoveDragRectCircle);
 		let index = this.Arrays.selectIndex;
 		this.RecordOperation('modify', '拖拽更新矩形框', index, JSON.stringify(this.Arrays.imageAnnotateMemory[index]));
+		uploadImage(false);
 	};
 
 	//----重新绘制已保存的图像标注记录与标签（删除修改之后重新渲染整体模块）
@@ -860,7 +928,7 @@ class LabelImage {
 					'<span class="result_color" style="background: '+ item.labels.labelColor +';"></span>' +
 					'<div class="result_Name">'+ item.labels.labelName +'</div>' +
 					'<i class="editLabelName icon-pencil"></i>' +
-					'<i class="deleteLabel icon-trash"></i>' +
+					'<i class="deleteLabel icon-trash" title="删除(删除选中框可使用快捷键R)"></i>' +
 					'<i class="isShowLabel '+ eyeIconClass +'"></i>';
 				this.Nodes.resultGroup.appendChild(resultListBody);
 			});
@@ -961,6 +1029,7 @@ class LabelImage {
 		this.RecordOperation('delete', '删除标定标签', index, JSON.stringify(this.Arrays.imageAnnotateMemory[index]));
 		this.Arrays.imageAnnotateShower.splice(index, 1);
 		this.RepaintResultList();
+		uploadImage(false);
 	};
 
 	//----已标定结果列表交互操作
@@ -1428,8 +1497,10 @@ class LabelImage {
 
 	//----监听浏览器是否全屏, 并调整尺寸
 	ScreenViewChange = () => {
+		console.log("ScreenViewChange")
 		if (document.webkitIsFullScreen || document.fullscreen || document.mozFullScreen || document.msFullscreenElement) {
 			// 全屏后调整节点尺寸
+			console.log("fullScreen")
 			let sFullHeight = window.screen.height;
 			this.Nodes.canvasMain.style.height = sFullHeight - 60 + "px";
 			this.Nodes.canvas.height = this.Nodes.canvasMain.offsetHeight;
@@ -1440,10 +1511,16 @@ class LabelImage {
 		else {
 			// 取消全屏后调整节点尺寸
 			let sNormalHeight = window.innerHeight;
+			let sNormalWidth = window.innerWidth;
+
 			this.Nodes.canvasMain.style.height = sNormalHeight - 60 + "px";
 			this.Nodes.canvas.height = this.Nodes.canvasMain.offsetHeight;
 			this.cHeight = this.Nodes.canvasMain.offsetHeight;
-			this.UpdateCanvas();
+			// this.Nodes.canvasMain.style.width = sNormalWidth + "px";
+			this.Nodes.canvas.width = this.Nodes.canvasContent.offsetWidth;
+			this.cWidth = this.Nodes.canvas.offsetWidth;
+			//this.UpdateCanvas(true, false);
+			this.DrawSavedAnnotateInfoToShow();
 			this.isFullScreen = false;
 		}
 	};
@@ -1460,7 +1537,7 @@ class LabelImage {
 	//----滚动条缩放事件
 	MouseWheel = (e) => {
 		let wd = e.wheelDelta || e.detail;
-		let newScale = this.scale * (1 + (wd > 0 ? this.scaleStep : -this.scaleStep));
+		let newScale = this.scale * (1 + (wd < 0 ? this.scaleStep : -this.scaleStep));
 		newScale = newScale < this.minScale ? this.minScale : newScale;
 		newScale = newScale > this.maxScale ? this.maxScale : newScale;
 
@@ -1474,7 +1551,7 @@ class LabelImage {
 		clearTimeout(this.mousewheelTimer);
 		this.mousewheelTimer = setTimeout(() => {
 			this.IsMouseWheelEnd()
-		}, 500);
+		}, 50);
 		if (this.drawFlag) {
 			this.DrawSavedAnnotateInfoToMemory(true);
 			this.drawFlag = false;
@@ -1537,6 +1614,7 @@ class LabelImage {
 		let o = this.calcXY(vx, vy);
 		this.x = o.x;
 		this.y = o.y;
+		console.log("setXY")
 		this.UpdateCanvas();
 	};
 
@@ -1563,8 +1641,10 @@ class LabelImage {
 
 	//----获取更新鼠标在当前展示画板中的位置
 	GetMouseInCanvasLocation = (e) => {
+
 		this.mouseX = this.XPointReplace(e.layerX || e.offsetX);
 		this.mouseY = this.YPointReplace(e.layerY || e.offsetY);
+		// console.log("mouse", e.layerX, this.mouseX, ",", e.layerY, this.mouseY);
 	};
 
 	//----获取鼠标当前相对所在存储面板图片中的位置

@@ -71,19 +71,19 @@
         <!--标注功能工具集-->
         <div class="toolFeatures">
             <div class="assistFeatures">
-                <p class="openFolder" title="打开文件夹"></p>
-                <p class="saveJson" title="发送标注结果到服务器"></p>
+<!--                <p class="openFolder" title="打开文件夹"></p>-->
+                <p class="saveJson" title="发送标注结果到服务器(快捷键：Ctrl+S)"></p>
                 <input class="openFolderInput" type="file" multiple onchange="changeFolder(this)" hidden>
             </div>
             <div class="separator"></div>
             <div id="tools">
-                <div class="toolSet toolDrag focus" title="图片拖拽"></div>
-                <div class="toolSet toolTagsManager"><span class="icon-tags"></span></div>
-                <div class="toolSet toolRect" title="矩形工具"></div>
+                <div class="toolSet toolDrag focus" title="图片拖拽(快捷键：D)"></div>
+<!--                <div class="toolSet toolTagsManager"><span class="icon-tags"></span></div>-->
+                <div class="toolSet toolRect" title="矩形工具(快捷键：F)"></div>
 <!--                <div class="toolSet toolPolygon" title="多边形工具"></div>-->
                 <!-- <div class="toolSet toolKeyPoints" title="人体关键点工具"></div> -->
             </div>
-            <div class="version">v1.0.1</div>
+            <div class="version">v1.1.1</div>
 <!--            <div class="dragIcons">-->
 <!--                <p></p>-->
 <!--                <p></p>-->
@@ -168,7 +168,7 @@
             <ul class="task-ul">
             </ul>
         </div>
-        <div class="saveHint">
+        <div class="saveHint init">
             <div style="text-align: center">Labels uploaded.</div>
             </ul>
         </div>

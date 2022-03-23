@@ -15,6 +15,7 @@ const annotate = new LabelImage({
 	scalePanel: document.querySelector('.scalePanel'),
 	annotateState: document.querySelector('.annotateState'),
 	canvasMain: canvasMain,
+	canvasContent: document.querySelector('.canvasContent'),
 	resultGroup: resultGroup,
 	crossLine: document.querySelector('.crossLine'),
 	labelShower: document.querySelector('.labelShower'),
@@ -115,18 +116,21 @@ function setImage(fromMemory=false) {
 		annotate.SetImage(img);
 }
 
-function uploadImage() {
+function uploadImage(showSaveDiv=true) {
 	let oldName = imgArray[imgIndex].name;
 	let size = imgArray[imgIndex].size;
 	let content = annotate.Arrays.imageAnnotateMemory;
 	sendAnnotation(oldName, content, size);
-
+	if (showSaveDiv) {
+		saveDiv.classList.remove("init");
 		saveDiv.classList.remove("blur");
 		saveDiv.classList.add("focus");
-	setTimeout(()=>{
-		saveDiv.classList.remove("focus");
-		saveDiv.classList.add("blur");
-	}, 500)
+		setTimeout(()=>{
+			saveDiv.classList.remove("focus");
+			saveDiv.classList.add("blur");
+		}, 1000)
+
+	}
 
 
 }
@@ -251,7 +255,7 @@ document.addEventListener('keydown', ev => {
 	if (ev.key === 'f' || ev.key === 'F') {
 		toolClick(tool.getElementsByClassName('toolRect')[0]);
 	}
-	if (ev.key === 'Backspace' || ev.key === 'Delete') {
+	if (ev.key === 'Backspace' || ev.key === 'Delete' || ev.key === 'r' || ev.key === 'R') {
 		if (annotate.Arrays.selectIndex !== -1) {
 			annotate.DeleteSomeResultLabel(annotate.Arrays.selectIndex);
 		}
@@ -284,21 +288,22 @@ prevBtn.onclick = function() {
 	}
 };
 
-document.querySelector('.openFolder').addEventListener('click', function() {
-	document.querySelector('.openFolderInput').click()
-});
-
-function changeFolder(e) {
-	imgArray = e.files;
-	processSum.innerText = imgSum();
-	imgIndex = 0;
-	new Promise(() => {
-		selectImage(0)
-	}).then(() => {});
-}
+// document.querySelector('.openFolder').addEventListener('click', function() {
+// 	document.querySelector('.openFolderInput').click()
+// });
+//
+// function changeFolder(e) {
+// 	imgArray = e.files;
+// 	processSum.innerText = imgSum();
+// 	imgIndex = 0;
+// 	new Promise(() => {
+// 		selectImage(0)
+// 	}).then(() => {});
+// }
 
 
 document.querySelector('.saveJson').addEventListener('click', function() {
+	console.log("???")
 	uploadImage();
 });
 // document.querySelector('.saveJson').addEventListener('click', function() {
