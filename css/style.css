@@ -144,7 +144,7 @@ body,html{
 }
 .toolMuster .logoGroup {
     position: relative;
-    width: 300px;
+    width: fit-content;
     z-index: 999999;
 }
 .toolMuster .logoGroup .logo {
@@ -165,7 +165,8 @@ body,html{
     font-size: 28px;
     line-height: 60px;
     color: #fff;
-    width: 300px;
+    width: fit-content;
+    float: left;
 }
 .toolMuster .selectOperation {
     position: absolute;
@@ -816,14 +817,16 @@ body,html{
     color: #999999;
 }
 .username {
+    float: left;
     text-indent: 60px;
     font-size: 20px;
     line-height: 60px;
     color: #fff;
-    width: 100px;
-    position: absolute;
-    top: 0;
-    left: 80px;
+    width: fit-content;
+    /*width: 180px;*/
+    /*position: absolute;*/
+    /*top: 0;*/
+    /*left: 80px;*/
     cursor: pointer;
 }
 .taskManage {

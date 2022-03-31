@@ -157,6 +157,7 @@ class LabelImage {
 			crossOn: false,
 			// 标注结果显示
 			labelOn: true,
+			removeRangeOn: false
 		};
 		this.imageMirror = null;
 		console.log(this.Nodes);
@@ -307,6 +308,8 @@ class LabelImage {
 		}
 		this.Features[f] = value;
 
+		if (f === 'removeRangeOn')
+			return;
 
 		// 清空标注结果列表中classList
 		let resultList = this.Nodes.resultGroup.getElementsByClassName("result_list");
@@ -489,7 +492,7 @@ class LabelImage {
 	//----监听画板鼠标点击
 	CanvasMouseDown = (e) => {
 
-		console.log("Canvas Mouse Down")
+		console.log("Canvas Mouse Down", e.layerX, e.layerY)
 		let _nodes = this.Nodes;
 		let _arrays = this.Arrays;
 		let enterDragMode = () => {
@@ -543,7 +546,7 @@ class LabelImage {
 				}
 			}
 			if (!this.isDragCircle){
-				if (this.Features.dragOn) {
+				if (this.Features.dragOn || this.Features.removeRangeOn) {
 					// 是否开启拖拽模式
 					enterDragMode();
 				}
@@ -670,7 +673,7 @@ class LabelImage {
 			}
 		}
 		this._markIndices = {selectIndex: _arrays.selectIndex, enterIndex};
-
+		console.log("this._markIndices =", this._markIndices)
 		this.UpdateCanvas(false);
 		_nodes.ctx.setLineDash([0,0]);
 		// console.log("draw: selectIndex", enterIndex, _arrays.selectIndex)
@@ -903,10 +906,16 @@ class LabelImage {
 	};
 
 	//----重新绘制已保存的图像标注记录与标签（删除修改之后重新渲染整体模块）
-	RepaintResultList = () => {
+	RepaintResultList = (newSelectIndex) => {
 		// 先清空标签, 之后再重新渲染
-		this.Arrays.selectIndex = -1;
-		this.DrawSavedAnnotateInfoToShow();
+		if (newSelectIndex != null) {
+			this.Arrays.selectIndex = newSelectIndex;
+			console.log("selectIndex =", newSelectIndex)
+		} else {
+			this.Arrays.selectIndex = -1;
+		}
+
+		this.DrawSavedAnnotateInfoToShow(newSelectIndex);
 		this.ReplaceAnnotateMemory();
 		this.Nodes.resultGroup.innerHTML = "";
 		if (this.Arrays.imageAnnotateShower.length > 0) {
@@ -1017,13 +1026,51 @@ class LabelImage {
 		document.querySelector('.resultLength').innerHTML = resultLength;
 	};
 
+	findNearest = (os, except) => {
+		let minDist = 1e1000;
+		let ret = null;
+		for (let i in this.Arrays.imageAnnotateShower) {
+			for (let oN in os) {
+				let o = os[oN];
+				let coords = getCenter(this.Arrays.imageAnnotateShower[i].rectMask);
+				let dist = distSquared(coords, o);
+				if (ret == null || dist < minDist) {
+					ret = +i;
+					minDist = dist;
+				}
+			}
+
+		}
+		return [ret, minDist];
+	}
 	//----删除某个已标定结果标签
-	DeleteSomeResultLabel = (index) => {
+	DeleteSomeResultLabel = (index, isRecursive=false) => {
+		if (!isRecursive) {
+			this._deletedPositions = [];
+		}
 		this.ReplaceAnnotateMemory();
 		this.RecordOperation('delete', '删除标定标签', index, JSON.stringify(this.Arrays.imageAnnotateMemory[index]));
+
+		let removedLabelCoords = getCenter(this.Arrays.imageAnnotateShower[index].rectMask);
+		this._deletedPositions.push(removedLabelCoords);
 		this.Arrays.imageAnnotateShower.splice(index, 1);
-		this.RepaintResultList();
+
+		let nearest = this.findNearest(this._deletedPositions, index);
+		// find nearest to this
+		let nearestIndex = nearest[0]
+		let nearestDist = nearest[1]
+		console.log("remove", index)
+		console.log("nearest =", nearestIndex);
+		this.RepaintResultList(nearestIndex);
 		uploadImage(false);
+
+		if (this.Features.removeRangeOn) {
+			if (nearestIndex != null && nearestDist ** 0.5 / (this.iWidth < this.iHeight ? this.iWidth : this.iHeight) / this.scale < 0.025) {
+				this.DeleteSomeResultLabel(nearestIndex, true);
+			} else {
+				console.log("end rec., dist =", nearestDist ** 0.5 / (this.iWidth < this.iHeight ? this.iWidth : this.iHeight) / this.scale)
+			}
+		}
 	};
 
 	//----已标定结果列表交互操作

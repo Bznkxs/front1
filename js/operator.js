@@ -37,6 +37,7 @@ const userDiv = document.querySelector('.username');
 const taskDiv = document.querySelector('.taskManage');
 const taskUL = taskDiv.querySelector('.task-ul');
 const saveDiv = document.querySelector('.saveHint');
+const removeRange = document.querySelector('.toolRemoveRange');
 
 userDiv.addEventListener('click', ()=>{
 	if (taskDiv.className.indexOf("focus") === -1) {
@@ -185,6 +186,8 @@ async function selectImage(index, prev=0) {
 
 }
 
+let initCallbackVar = 0;
+
 function initCallback(ret_data){
 
 	imgIndex = ret_data.index;
@@ -196,12 +199,28 @@ function initCallback(ret_data){
 	for (let i = 0; i < len; ++i) {
 		imgArray.push(null);
 	}
-	imgArray[imgIndex] = ret_data.image;
-	task = ret_data.task;
-	userDiv.innerText = task + '@' + ret_data.user;
-	tasks = ret_data.tasks;
-	updateTasks();
-	setImage();
+
+			imgArray[imgIndex] = ret_data.image;
+		task = ret_data.task;
+		userDiv.innerText = task + '@' + ret_data.user;
+		tasks = ret_data.tasks;
+		updateTasks();
+		setImage();
+
+	// if (ret_data.image == null) {
+	// 	if (initCallbackVar === 1) return;
+	// 	initCallbackVar = 1;
+	// 	fetchNewImage(0, initCallback);
+	// } else {
+	// 	initCallbackVar = 0;
+	// 	imgArray[imgIndex] = ret_data.image;
+	// 	task = ret_data.task;
+	// 	userDiv.innerText = task + '@' + ret_data.user;
+	// 	tasks = ret_data.tasks;
+	// 	updateTasks();
+	// 	setImage();
+	// }
+
 }
 
 // 初始化图片状态
@@ -260,6 +279,8 @@ let toolClick = function(target) {
 		case target.className.indexOf('toolTagsManager') > -1:  // 标签管理工具
 			annotate.SetFeatures('tagsOn', true);
 			break;
+		case target.className.indexOf('toolRemoveRange') > -1: // range remove
+			annotate.SetFeatures('removeRangeOn', true)
 		default:
 			break;
 	}
@@ -285,6 +306,9 @@ document.addEventListener('keydown', ev => {
 			annotate.DeleteSomeResultLabel(annotate.Arrays.selectIndex);
 		}
 	}
+	if (ev.key === 'e' || ev.key === 'E') {
+		toolClick(tool.getElementsByClassName('toolRemoveRange')[0]);
+	}
 	if (ev.ctrlKey && (ev.key === 's' || ev.key === 'S')) {
 		uploadImage();
 		ev.preventDefault();
@@ -295,6 +319,7 @@ document.addEventListener('keydown', ev => {
 	if (ev.key === 'q' || ev.key === 'Q') {
 		getPrevImage();
 	}
+
 	console.log(ev.key);
 })
 
