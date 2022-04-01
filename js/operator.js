@@ -50,7 +50,7 @@ taskDiv.addEventListener('mouseleave', ()=>{
 userDiv.addEventListener('click', ()=>{
 	if (taskDiv.className.indexOf("focus") === -1) {
 			taskDivClicked = false;
-			taskDiv.classList.remove('init');
+			taskDiv.classList.remove('taskManageInit');
 			taskDiv.classList.remove("blur");
 			taskDiv.classList.add("focus");
 		}else {
@@ -214,7 +214,8 @@ function initCallback(ret_data){
 	for (let x in colorDict) {
 		delete colorDict[x];
 	}
-	labelSelector.style.visibility = 'collapse';
+	updateColorBox();
+	// labelSelector.style.visibility = 'collapse';
 	taskPermission = +ret_data.permission;
 	let len = ret_data.len;
 	imgIndex = ret_data.index;

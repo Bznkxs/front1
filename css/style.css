@@ -157,6 +157,7 @@ body,html{
     float: left;
     overflow-y: auto;
     background: #11192c;
+    overflow-x: hidden;
 }
 
 .labelContainer {
@@ -214,6 +215,8 @@ body,html{
     background-size: 100%;
 }
 
+
+
 .labelContainer .labelVisibility {
     position: relative;
     left: 24px;
@@ -222,6 +225,34 @@ body,html{
     height:28px;
     visibility: visible;
     z-index: 10000;
+}
+
+.labelAdd {
+    font-size: 32px;
+    font-weight: bolder;
+    color: #757a83;
+    left: 15px;
+    width: 34px;
+    height: 34px;
+    padding-left: 6px;
+    padding-bottom: 6px;
+    position: relative;
+    border-width: 2px;
+    border-radius: 5px;
+    border-style: solid;
+    cursor: pointer;
+}
+
+.labelNewInput {
+    position: relative;
+    width: 58px;
+    top: 20px;
+    left: 8px;
+    height: 16px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    font-size: 14px;
+
 }
 
 .toolHead .toolMuster {
@@ -233,6 +264,8 @@ body,html{
     position: relative;
     float: left;
 }
+
+
 
 .toolMuster .logoGroup {
     position: relative;
@@ -950,8 +983,8 @@ body,html{
     -o-animation: hideTaskManage 0.4s ease-out forwards;
     animation: hideTaskManage 0.4s ease-out forwards;
 }
-.taskManage .init {
-    visibility: hidden;
+.taskManageInit {
+    visibility: collapse;
 }
 @keyframes showTaskManage {
     from {
@@ -1172,7 +1205,7 @@ body,html{
     box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.3);
     z-index: 999999;
     opacity: 0;
-    visibility: hidden;
+    visibility: collapse;
 }
 .labelManage .labelManage-Info {
     width: 100%;

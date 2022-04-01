@@ -1040,7 +1040,7 @@ class LabelImage {
 		resultListBody.className = "result_list active";
 		resultListBody.id = resultLength;
 		resultListBody.innerHTML = '<span class="result_no">'+ resultLength +'</span>' +
-			'<span class="result_color"></span>' +
+			'<span class="result_color" style="background: ' + selectedClass.hex + ';"></span>' +
 			'<div class="result_Name">' + selectedClass.cls + '</div>' +
 			'<i class="editLabelName icon-pencil"></i>' +
 			'<i class="deleteLabel icon-trash"></i>' +

@@ -39,7 +39,7 @@ function parseLabel(labelBase64) {
         }
         let line = split1[i].split(/\s+/);
         let id = i;
-        let cls = +line[0];
+        let cls = line[0];
         let coords = [];
         for (let i = 1; i <= 4; ++i) {
             coords.push(+line[i]);

@@ -485,25 +485,25 @@ colorDict = {};
 
 colorArray = [];
 
-firstCode = 214120;
+firstCode = 36100+20*361*101;
 
 function codeToRGB(code) {
     let hsb = {
-        h: code % 101,
-        s: Math.floor(code / 101) % 101,
-        b: (Math.floor(code / 10201) + 1) % 22 + 79
+        h: code % 361,
+        s: (Math.floor(code / 361)) % 31 + 70,
+        b: (Math.floor(code / 361 / 101) + 1) % 22 + 79
     };
     return Colorpicker.prototype.HSBToRGB(hsb);
 
 }
 
 function getNewCode(oldCode) {
-    return (((oldCode ** 2) % (214237) * (oldCode - 3441)) % (214237) + 214237) % 214237;
+    return (((oldCode) % (361*101*21) + (37 )) % (361*101*21) + 214237) % (361*101*22);
 }
 labelSelector = document.getElementsByClassName('labelSelector')[0];
 
 function getColorByName(name) {
-
+    console.log("get color", name)
     if (name in colorDict) {
         return colorDict[name];
     }
@@ -549,11 +549,12 @@ function updateSelectedClass(name, clsTick) {
 }
 
 function updateColorBox() {
+    // console.log("update collor ")
     labelSelector.innerHTML = '';
-    if (colorArray.length > 1) {
-        labelSelector.style.visibility = 'visible'
-    }
-    // console.log("update", colorArray.length);
+    // if (colorArray.length > 1) {
+    //     labelSelector.style.visibility = 'visible'
+    // }
+    console.log("update", colorArray.length);
     let firstFn = null;
     for (let i = 0; i < colorArray.length; ++i) {
         let name = colorArray[i];
@@ -611,8 +612,50 @@ function updateColorBox() {
         if (firstFn == null) firstFn = fn;
         clsDiv.addEventListener('click', fn);
     }
-    if (selectedClass.cls == null) {
+    if (selectedClass.cls == null && firstFn != null) {
         firstFn();
+    }
+    let addDiv = document.createElement('div');
+    addDiv.classList.add('labelAdd');
+    addDiv.innerHTML = '+';
+    let inputDiv = document.createElement('input');
+    inputDiv.classList.add('labelNewInput');
+
+    inputDiv.style.visibility = 'collapse'
+    let invalidDiv = document.createElement('div');
+    invalidDiv.style.color = 'red';
+    invalidDiv.style.fontSize = "10px";
+    invalidDiv.innerText = '名字重复'
+    invalidDiv.style.marginLeft = '16px';
+    invalidDiv.style.visibility = 'hidden';
+
+    labelSelector.appendChild(inputDiv);
+    labelSelector.appendChild(invalidDiv);
+    labelSelector.appendChild(addDiv);
+    inputDiv.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            if (inputDiv.value in colorDict) {
+                invalidDiv.style.visibility = 'visible';
+                console.log(invalidDiv.style.visibility);
+
+            } else {
+                invalidDiv.style.visibility = 'hidden';
+                getColorRGBByName(inputDiv.value);
+            }
+
+        }
+        e.stopPropagation();
+    }
+    addDiv.onclick = (e) => {
+        inputDiv.style.visibility = 'visible';
+        labelSelector.addEventListener('click', (e) => {
+            if (e.target === labelSelector) {
+                inputDiv.style.visibility = 'collapse';
+                invalidDiv.style.visibility = 'hidden';
+            }
+
+        })
+        e.stopPropagation();
     }
 
 }
