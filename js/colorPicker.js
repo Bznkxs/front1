@@ -72,11 +72,9 @@
         for(var prop in opt){
             Colorpicker.Opt[prop] = opt[prop];
         };
-
         var elemArr = document.getElementsByClassName(Colorpicker.Opt.bindClass);
-
-        for(var i=0;i<elemArr.length;i++){
-            elemArr[i].colorpicker = new Colorpicker(elemArr[i]);
+		for(var i=0;i<elemArr.length;i++){
+			elemArr[i].colorpicker = new Colorpicker(elemArr[i]);
         }
 
     }
@@ -187,6 +185,7 @@
 
             var body = document.getElementsByTagName("body")[0],
                 div = document.createElement("div");
+			div.className = "colorDiv";
 
             div.innerHTML = this.render();
             body.appendChild(div);
@@ -222,7 +221,7 @@
                  "z-index": 9999999,
                  "display": 'none',
                  "left": left + "px",
-                 "top": top + this.bindElem.offsetHeight + "px"
+                 "top": this.pancelTop + 10 + "px"
             });
 
             this.bindMove(this.elem_colorPancel,this.setPosition,true);
@@ -473,3 +472,148 @@
 
     window.Colorpicker = Colorpicker;
 })()
+
+defaultColorDict = {
+    "0": {
+        code: 214120,
+        rgb: {r:255,g:0,b:0}
+    }
+};
+
+
+colorDict = {};
+
+colorArray = [];
+
+firstCode = 214120;
+
+function codeToRGB(code) {
+    let hsb = {
+        h: code % 101,
+        s: Math.floor(code / 101) % 101,
+        b: (Math.floor(code / 10201) + 1) % 22 + 79
+    };
+    return Colorpicker.prototype.HSBToRGB(hsb);
+
+}
+
+function getNewCode(oldCode) {
+    return (((oldCode ** 2) % (214237) * (oldCode - 3441)) % (214237) + 214237) % 214237;
+}
+labelSelector = document.getElementsByClassName('labelSelector')[0];
+
+function getColorByName(name) {
+
+    if (name in colorDict) {
+        return colorDict[name];
+    }
+    let code;
+
+    if (colorArray.length === 0) {
+        code = firstCode;
+    } else {
+        let lastCode = colorDict[colorArray[colorArray.length - 1]].code;
+        code = getNewCode(lastCode);
+    }
+    let rgb = codeToRGB(code);
+    colorDict[name] = {code, rgb}
+    colorArray.push(name)
+    updateColorBox();
+    return colorDict[name];
+}
+
+function getColorRGBByName(name) {
+    let labelColor = getColorByName(name);
+    let labelColorHex = '#' + Colorpicker.prototype.rgbToHex(labelColor.rgb);
+    let labelColorRGB = labelColor.rgb.r + ',' + labelColor.rgb.g + ',' + labelColor.rgb.b;
+    return {labelColorHex, labelColorRGB}
+}
+
+selectedClass = {
+    cls: null,
+    tick: null,
+    hex: null,
+    rgb: null
+}
+
+function updateSelectedClass(name, clsTick) {
+    if (selectedClass.cls != null) {
+        selectedClass.tick.style.visibility = 'hidden';
+    }
+    selectedClass.cls = name;
+    selectedClass.tick = clsTick;
+    clsTick.style.visibility = 'visible';
+    let tmp = getColorRGBByName(name);
+    selectedClass.hex = tmp.labelColorHex;
+    selectedClass.rgb = tmp.labelColorRGB;
+}
+
+function updateColorBox() {
+    labelSelector.innerHTML = '';
+    if (colorArray.length > 1) {
+        labelSelector.style.visibility = 'visible'
+    }
+    // console.log("update", colorArray.length);
+    let firstFn = null;
+    for (let i = 0; i < colorArray.length; ++i) {
+        let name = colorArray[i];
+
+        let clsDiv = document.createElement('div');
+        clsDiv.classList.add('labelContainer');
+        clsDiv.classList.add('labelNormal')
+        let clsCir = document.createElement('div');
+        clsCir.classList.add('labelCircle');
+        clsCir.style.backgroundColor = '#' + Colorpicker.prototype.rgbToHex(colorDict[name].rgb);
+        clsDiv.appendChild(clsCir);
+        let clsName = document.createElement('div');
+        clsName.classList.add('labelName');
+        clsName.innerText = name;
+        clsDiv.appendChild(clsName);
+        let clsTick = document.createElement("div");
+        clsTick.classList.add('labelTick');
+        if (name === selectedClass.cls) {
+            updateSelectedClass(name, clsTick);
+        } else {
+            clsTick.style.visibility = 'hidden';
+        }
+
+        clsDiv.appendChild(clsTick);
+        let clsMask = document.createElement("div");
+        clsMask.classList.add('labelMask');
+        clsMask.style.visibility = 'hidden';
+        clsDiv.appendChild(clsMask);
+        let clsVis = document.createElement("div");
+        clsVis.classList.add('labelVisibility');
+        clsVis.innerHTML = '<i class="isShowLabel icon-eye-close"></i>'
+        //clsVis.classList.add('icon-eye-open');
+
+        clsDiv.appendChild(clsVis);
+        labelSelector.appendChild(clsDiv);
+        clsDiv.addEventListener('mouseenter', ()=>{
+
+            console.log("mouseEnter")
+            clsMask.style.visibility = 'visible';
+            console.log(clsMask.style);
+            annotate.labelMouseFocus(name);
+        })
+        clsDiv.addEventListener('mouseleave', ()=>{
+            console.log("mouseLeave")
+            clsMask.style.visibility = 'hidden';
+            annotate.labelLostMouseFocus(name);
+        })
+        let fn = ()=>{
+            console.log("click", name)
+            // annotate.labelClick(name, clsTick);
+            updateSelectedClass(name, clsTick);
+
+
+        };
+        if (firstFn == null) firstFn = fn;
+        clsDiv.addEventListener('click', fn);
+    }
+    if (selectedClass.cls == null) {
+        firstFn();
+    }
+
+}
+

@@ -79,7 +79,7 @@ class LabelImage {
 		this.mousewheelTimer = null;
 
 		// 历史记录下标
-		this.historyIndex = 0;
+		this.historyIndex = -1;
 
 		this.Arrays = {
 
@@ -268,7 +268,7 @@ class LabelImage {
 
 
 
-			this.historyIndex = 0;
+			this.historyIndex = -1;
 			if (memory) {
 				console.log(memory);
 				this.Arrays.imageAnnotateMemory = memory;
@@ -283,7 +283,7 @@ class LabelImage {
 					const yMin = top * this.iHeight;
 					const xWidth = width * this.iWidth;
 					const yHeight = height * this.iHeight;
-					this.createNewRectLabel(xMin, yMin, xMin + xWidth, yMin + yHeight, false);
+					this.createNewRectLabel(xMin, yMin, xMin + xWidth, yMin + yHeight, false, label.class);
 				});
 			}
 			this.ReplaceAnnotateShow();
@@ -324,7 +324,7 @@ class LabelImage {
 	UpdateCanvas = (scaled=true) => {
 
 		let _nodes = this.Nodes;
-		console.log("H,W", this.cHeight, this.cWidth, _nodes.canvas.offsetHeight, _nodes.canvas.offsetWidth, _nodes.canvas.height, _nodes.canvas.width)
+		// console.log("H,W", this.cHeight, this.cWidth, _nodes.canvas.offsetHeight, _nodes.canvas.offsetWidth, _nodes.canvas.height, _nodes.canvas.width)
 		_nodes.ctx.clearRect(0, 0, this.cWidth, this.cHeight);
 
 		// console.log("Height", this.cHeight);
@@ -628,10 +628,37 @@ class LabelImage {
 		}
 	};
 
+	selectLabel = (cmd) => {
+		if (this.Arrays.selectIndex === -1) {
+			this.Arrays.selectIndex = 0;
+		} else {
+			if (cmd === 'l' || cmd === 'u') {
+				this.Arrays.selectIndex--;
+			} else if (cmd === 'd' || cmd === 'r') {
+				this.Arrays.selectIndex++;
+			}
+			if (this.Arrays.selectIndex < 0) {
+				this.Arrays.selectIndex = this.Arrays.imageAnnotateShower.length - 1;
+
+			} if (this.Arrays.selectIndex >= this.Arrays.imageAnnotateShower.length) {
+				this.Arrays.selectIndex = 0;
+			}
+
+		}
+		this.RepaintResultList(this.Arrays.selectIndex);
+
+	}
+
 	//----绘制矩形的方法
-	DrawRect = (ctx, x, y, width, height, color, rgb) => {
+	DrawRect = (ctx, x, y, width, height, color, rgb, lineWidth, opacity) => {
+		if (lineWidth != null) {
+			ctx.lineWidth = lineWidth;
+		}
+		if (opacity == null) {
+			opacity = this.opacity;
+		}
 		ctx.strokeStyle = color;
-		ctx.fillStyle = "rgba("+ rgb +"," + this.opacity + ")";
+		ctx.fillStyle = "rgba("+ rgb +"," + opacity + ")";
 		ctx.strokeRect(x, y, width, height);
 		ctx.fillRect(x, y, width, height);
 	};
@@ -659,10 +686,10 @@ class LabelImage {
 	};
 
 	//----绘制已保存的标定信息（在数据操作更新时渲染）绘至数据展示画板
-	DrawSavedAnnotateInfoToShow = (enterIndex, mouseMoveOnly=false) => {
+	DrawSavedAnnotateInfoToShow = (enterIndex, mouseMoveOnly=false, forceRepaint=false) => {
 		let _arrays = this.Arrays;
 		let _nodes = this.Nodes;
-		if (mouseMoveOnly === true) {
+		if (mouseMoveOnly === true && forceRepaint === false) {
 			if (this._markIndices !== undefined) {
 				if (this._markIndices.selectIndex === _arrays.selectIndex) {
 					if (enterIndex && this._markIndices.enterIndex === enterIndex ||
@@ -682,6 +709,10 @@ class LabelImage {
 				// 绘制闭合线条
 				_nodes.ctx.beginPath();
 				_nodes.ctx.lineWidth = this.lineWidth;
+
+				if (item.labels.labelName === this.focusedLabelName) {
+					_nodes.ctx.lineWidth++;
+				}
 				_nodes.ctx.moveTo(item.content[0].x, item.content[0].y);
 				item.content.forEach((line) => {
 					_nodes.ctx.lineTo(line.x, line.y);
@@ -692,7 +723,17 @@ class LabelImage {
 				_nodes.ctx.stroke();
 			}
 			else if (item.contentType === "rect") {
-				this.DrawRect(_nodes.ctx, item.rectMask.xMin, item.rectMask.yMin, item.rectMask.width, item.rectMask.height, item.labels.labelColor, item.labels.labelColorRGB);
+				let lineWidth = this.lineWidth;
+				let opacity = this.opacity;
+				// console.log("opa", opacity)
+				if (item.labels.labelName === this.focusedLabelName) {
+					lineWidth++;
+					opacity = .7;
+				}
+				this.DrawRect(_nodes.ctx, item.rectMask.xMin, item.rectMask.yMin,
+					item.rectMask.width, item.rectMask.height, item.labels.labelColor, item.labels.labelColorRGB,
+					lineWidth,
+					opacity);
 			}
 			if (_arrays.selectIndex !== -1 && _arrays.selectIndex === index) {
 
@@ -828,6 +869,7 @@ class LabelImage {
 		this.Nodes.canvas.removeEventListener('mousemove', this.ImageDrag);
 		this.Nodes.canvas.removeEventListener('mouseup', this.RemoveImageDrag);
 		if (this.dragRectMask != null) {
+			this.RecordOperation('modify', '拖拽更新矩形框', this.dragRectMask, JSON.stringify(this.Arrays.imageAnnotateMemory[this.dragRectMask]));
 			uploadImage(false);
 		}
 	};
@@ -836,8 +878,9 @@ class LabelImage {
 	MouseMoveDrawRect = (e) => {
 		this.GetMouseInCanvasLocation(e);
 		this.DrawSavedAnnotateInfoToShow();
-		this.Nodes.ctx.strokeStyle = "#ff0000";
-		this.Nodes.ctx.fillStyle = "rgba(255,0,0,"+ this.opacity +")";
+		this.Nodes.ctx.strokeStyle = selectedClass.hex;
+		console.log("mouse move draw rect")
+		this.Nodes.ctx.fillStyle = "rgba(" + selectedClass.rgb + this.opacity +")";
 		this.Nodes.ctx.strokeRect(this.rectX, this.rectY, this.mouseX-this.rectX, this.mouseY-this.rectY);
 		this.Nodes.ctx.fillRect(this.rectX, this.rectY, this.mouseX-this.rectX, this.mouseY-this.rectY);
 	};
@@ -880,6 +923,14 @@ class LabelImage {
 		}
 	};
 
+	labelMouseFocus = (name) => {
+		this.focusedLabelName = name;
+		this.DrawSavedAnnotateInfoToShow(null, false, true);
+	}
+	labelLostMouseFocus = (name) => {
+		this.focusedLabelName = null;
+		this.DrawSavedAnnotateInfoToShow(null, false, true);
+	}
 	//----拖拽矩形圆点时重新绘制矩形事件
 	DragRectCircleRepaintRect = (e) => {
 		this.GetMouseInCanvasLocation(e);
@@ -956,6 +1007,10 @@ class LabelImage {
 			width: xMax - xMin,
 			height: yMax - yMin
 		};
+		let labelColorHex, labelColorRGB;
+		let tmp = getColorRGBByName(labelName);
+		labelColorHex = tmp.labelColorHex;
+		labelColorRGB = tmp.labelColorRGB;
 		(shower?this.Arrays.imageAnnotateShower: this.Arrays.imageAnnotateMemory).push({
 			content: [
 				{x: xMin, y: yMin},
@@ -965,8 +1020,8 @@ class LabelImage {
 			],
 			labels: {
 				labelName,
-				labelColor: "red",
-				labelColorRGB: "255,0,0",
+				labelColor: labelColorHex,
+				labelColorRGB: labelColorRGB,
 				visibility: this.Nodes.labelShower.children[0].checked,
 			},
 			labelLocation: this.ComputerLabelLocation(rectMask),
@@ -986,7 +1041,7 @@ class LabelImage {
 		resultListBody.id = resultLength;
 		resultListBody.innerHTML = '<span class="result_no">'+ resultLength +'</span>' +
 			'<span class="result_color"></span>' +
-			'<div class="result_Name">0</div>' +
+			'<div class="result_Name">' + selectedClass.cls + '</div>' +
 			'<i class="editLabelName icon-pencil"></i>' +
 			'<i class="deleteLabel icon-trash"></i>' +
 			'<i class="isShowLabel '+ eyeIconClass +'"></i>';
@@ -1001,7 +1056,7 @@ class LabelImage {
 		}
 
 		if (contentType === "rect") {
-			this.createNewRectLabel(this.rectX, this.rectY, this.mouseX, this.mouseY);
+			this.createNewRectLabel(this.rectX, this.rectY, this.mouseX, this.mouseY, true, selectedClass.cls);
 
 		}
 		else if (contentType === "polygon") {
@@ -1028,8 +1083,11 @@ class LabelImage {
 
 	findNearest = (os, except) => {
 		let minDist = 1e1000;
-		let ret = null;
+		let ret = -1;
 		for (let i in this.Arrays.imageAnnotateShower) {
+			if (except != null && +i === except) {
+				continue;
+			}
 			for (let oN in os) {
 				let o = os[oN];
 				let coords = getCenter(this.Arrays.imageAnnotateShower[i].rectMask);
@@ -1043,19 +1101,77 @@ class LabelImage {
 		}
 		return [ret, minDist];
 	}
+	checkMinDist = (distSquared, update=true) => {
+		if (update || this._checkMinDistThreshold === undefined) {
+			this._checkMinDistThreshold = (this.iWidth < this.iHeight ? this.iWidth : this.iHeight) * this.scale;
+		}
+		return distSquared ** 0.5 / this._checkMinDistThreshold < 0.005
+	}
+	deleteMultipleLabels = (index) => {
+		this.ReplaceAnnotateMemory();
+		this.checkMinDist(0);  // update once first
+		let coords = [];
+		let rects = [];
+		for (let i in this.Arrays.imageAnnotateShower) {
+			rects.push(this.Arrays.imageAnnotateShower[i].rectMask);
+			coords.push(getCenter(this.Arrays.imageAnnotateShower[i].rectMask));
+
+		}
+
+
+		let remove_map = new Int8Array(this.Arrays.imageAnnotateMemory.length);
+		remove_map[index] = 1;
+		let queue = [index];
+		let qP = 0;
+
+		while (qP < queue.length) {
+			let x = queue[qP];
+			let o = rects[x];
+			this._deletedPositions.push(coords[x]);
+
+			++qP;
+			for (let i in this.Arrays.imageAnnotateShower) {
+				if (!remove_map[i] && this.checkMinDist(rectDistSquared(o, rects[i]), false)) {
+					queue.push(i);
+					remove_map[i] = 1;
+
+				}
+			}
+		}
+
+		for (let i = this.Arrays.imageAnnotateShower.length - 1; i >= 0; --i) {
+			if (remove_map[i]) {
+				this.Arrays.imageAnnotateShower.splice(i, 1);
+				this._deletedMemory.push(i);
+			}
+
+		}
+
+	}
 	//----删除某个已标定结果标签
 	DeleteSomeResultLabel = (index, isRecursive=false) => {
+
 		if (!isRecursive) {
 			this._deletedPositions = [];
+			this._deletedMemory = []
 		}
 		this.ReplaceAnnotateMemory();
-		this.RecordOperation('delete', '删除标定标签', index, JSON.stringify(this.Arrays.imageAnnotateMemory[index]));
+
 
 		let removedLabelCoords = getCenter(this.Arrays.imageAnnotateShower[index].rectMask);
 		this._deletedPositions.push(removedLabelCoords);
-		this.Arrays.imageAnnotateShower.splice(index, 1);
 
-		let nearest = this.findNearest(this._deletedPositions, index);
+		if (this.Features.removeRangeOn) {
+			this.deleteMultipleLabels(index);
+			this.RecordOperation('deleteMultiple', '删除多标定标签', index, this._deletedMemory);
+		} else {
+
+			this.RecordOperation('delete', '删除标定标签', index, JSON.stringify(this.Arrays.imageAnnotateMemory[index]));
+			this.Arrays.imageAnnotateShower.splice(index, 1);
+		}
+
+
+		let nearest = this.findNearest(this._deletedPositions);
 		// find nearest to this
 		let nearestIndex = nearest[0]
 		let nearestDist = nearest[1]
@@ -1065,7 +1181,8 @@ class LabelImage {
 		uploadImage(false);
 
 		if (this.Features.removeRangeOn) {
-			if (nearestIndex != null && nearestDist ** 0.5 / (this.iWidth < this.iHeight ? this.iWidth : this.iHeight) / this.scale < 0.025) {
+			return;
+			if (nearestIndex != null && this.checkMinDist(nearestDist)) {
 				this.DeleteSomeResultLabel(nearestIndex, true);
 			} else {
 				console.log("end rec., dist =", nearestDist ** 0.5 / (this.iWidth < this.iHeight ? this.iWidth : this.iHeight) / this.scale)
@@ -1372,33 +1489,56 @@ class LabelImage {
 	HistoryClick = (e) => {
 		let index = e.target.dataset.index;
 		if (index) {
+
 			this.historyIndex = parseInt(index);
+			console.log("click: historyIndex =", this.historyIndex)
 			this.RenderHistoryState(this.historyIndex);
 		}
 	};
+	getActiveHistoryIndex = () => {
+		let index = this.historyIndex;
+		if (index === undefined || index == null) {
+			this.historyIndex = index = -1;
+		}
+		return index;
+	}
+	undo = () => {
+		let index = this.getActiveHistoryIndex();
+		if (index >= 0) {
+			this.RenderHistoryState(index - 1);
+		}
+
+	}
 
 	//----渲染至指定历史记录状态
 	RenderHistoryState = (index) => {
+
 		let history = this.Arrays.history;
 		let historyNodes = this.Nodes.historyGroup.children;
-		let prevIndex = -1;
-		for (let i=0; i<historyNodes.length; i++) {
-			if (historyNodes[i].classList.value.indexOf('active') > -1) {
-				prevIndex = i;
-				break;
-			}
-		}
+		let prevIndex = this.getActiveHistoryIndex();
+		// for (let i=0; i<historyNodes.length; i++) {
+		// 	if (historyNodes[i].classList.value.indexOf('active') > -1) {
+		// 		prevIndex = i;
+		// 		break;
+		// 	}
+		// }
 		// 移除上一个历史记录列表焦点
 		prevIndex !== -1 && historyNodes[prevIndex].classList.remove('active');
+		console.log("index =", index, historyNodes[index+1])
 		this.Arrays.imageAnnotateMemory.splice(0, this.Arrays.imageAnnotateMemory.length);
 		for (let i=history.length-1; i>index; i--) {
+			console.log("record", i)
 			historyNodes[i].classList.add('record');
 		}
 		for (let i=0; i<=index; i++) {
 			historyNodes[i].classList.remove('record');
 			this.HistoryTypeOperation(history[i].type, history[i].index, history[i].content);
 		}
-		historyNodes[index].classList.add('active');
+		if (index > -1) {
+			historyNodes[index].classList.add('active');
+		}
+		this.historyIndex = index;
+		console.log("give: historyIndex =", index)
 		this.ReplaceAnnotateShow();
 		this.RepaintResultList();
 	};
@@ -1414,6 +1554,11 @@ class LabelImage {
 				break;
 			case "delete":
 				this.Arrays.imageAnnotateMemory.splice(index, 1);
+				break;
+			case "deleteMultiple":
+				for (let p = 0; p < content.length; ++p) {
+					this.Arrays.imageAnnotateMemory.splice(content[p], 1);
+				}
 				break;
 			default:
 				this.Arrays.imageAnnotateMemory[index] = JSON.parse(content);
@@ -1440,6 +1585,8 @@ class LabelImage {
 		};
 		this.Arrays.history.push(historyData);
 		this.historyIndex++;
+		console.log("historyIndex", this.historyIndex)
+		console.log("this.Array.history", this.Arrays.history.length)
 	};
 
 	//----将历史记录渲染到页面上

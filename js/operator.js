@@ -39,8 +39,18 @@ const taskUL = taskDiv.querySelector('.task-ul');
 const saveDiv = document.querySelector('.saveHint');
 const removeRange = document.querySelector('.toolRemoveRange');
 
+let taskDivClicked = false;
+taskDiv.addEventListener('mouseleave', ()=>{
+	if (taskDivClicked) {
+		taskDiv.classList.remove("focus");
+		taskDiv.classList.add("blur");
+	}
+})
+
 userDiv.addEventListener('click', ()=>{
 	if (taskDiv.className.indexOf("focus") === -1) {
+			taskDivClicked = false;
+			taskDiv.classList.remove('init');
 			taskDiv.classList.remove("blur");
 			taskDiv.classList.add("focus");
 		}else {
@@ -79,6 +89,7 @@ function updateTasks() {
 			li.classList.remove('taskManage-li-mouse-enter');
 		}
 		li.onclick = () => {
+			taskDivClicked = true;
 			changeTask(li.innerText, initCallback)
 		}
 		fragment.appendChild(li);
@@ -106,7 +117,13 @@ function setStorage(name, val) {
 // called when imgIndex or imgArray change. show image on screen.
 function setImage(fromMemory=false) {
 	processIndex.innerText = imgIndex + 1;
+	if (taskPermission === 0) {
+		processIndex.innerText = '已标注' + (imgIndex + 1);
+	}
 	processSum.innerText = imgSum();
+	if (taskPermission === 0) {
+		processSum.innerText = '已分配' +  imgSum()
+	}
 	let name = imgArray[imgIndex].name;
 	taskName.innerText = name;
 	console.log("setImage", name);
@@ -114,7 +131,8 @@ function setImage(fromMemory=false) {
 	// console.log('content', content);
 	let img = imgArray[imgIndex];
 	fromMemory && content ? annotate.SetImage(img, JSON.parse(content)) :
-		annotate.SetImage(img);
+			annotate.SetImage(img);
+
 }
 
 function uploadImage(showSaveDiv=true) {
@@ -136,7 +154,7 @@ function uploadImage(showSaveDiv=true) {
 
 }
 
-async function selectImage(index, prev=0) {
+async function selectImage(index, prev=0, render=true) {
 	if (index !== imgIndex) {
 		// send information to web
 		console.log('imgIndex', imgIndex)
@@ -154,14 +172,15 @@ async function selectImage(index, prev=0) {
 			fetchNewImage(null, (ret_data)=>{
 				if (ret_data == null) {
 					if (index > 0) {
-						selectImage(0, 1);
+						selectImage(0, 1, render);
 					}
 
 					return;
 				}
 				imgArray.push(ret_data);
 				imgIndex = index;
-				setImage();
+				if (render)
+					setImage();
 			});
 		} else if (imgArray[index] == null) {
 			fetchNewImage(index, (ret_data)=>{
@@ -174,12 +193,14 @@ async function selectImage(index, prev=0) {
 				}
 				imgArray[index] = ret_data;
 				imgIndex = index;
-				setImage();
+				if (render)
+					setImage();
 			});
 		} else {
 			imgIndex = index;
 			announceChangeImage(index);
-			setImage(true);
+			if (render)
+				setImage(true);
 		}
 	}
 
@@ -187,12 +208,16 @@ async function selectImage(index, prev=0) {
 }
 
 let initCallbackVar = 0;
-
+let taskPermission = 0;
 function initCallback(ret_data){
-
-	imgIndex = ret_data.index;
-
+	colorArray.splice(0, colorArray.length)
+	for (let x in colorDict) {
+		delete colorDict[x];
+	}
+	labelSelector.style.visibility = 'collapse';
+	taskPermission = +ret_data.permission;
 	let len = ret_data.len;
+	imgIndex = ret_data.index;
 	if (len === imgIndex) ++len;
 	console.log(imgIndex, len);
 	imgArray = [];
@@ -202,7 +227,7 @@ function initCallback(ret_data){
 
 			imgArray[imgIndex] = ret_data.image;
 		task = ret_data.task;
-		userDiv.innerText = task + '@' + ret_data.user;
+		userDiv.innerText = ret_data.user+ '@' + task ;
 		tasks = ret_data.tasks;
 		updateTasks();
 		setImage();
@@ -319,7 +344,19 @@ document.addEventListener('keydown', ev => {
 	if (ev.key === 'q' || ev.key === 'Q') {
 		getPrevImage();
 	}
-
+	if (ev.key === 'ArrowDown') {
+		console.log("??")
+		annotate.selectLabel('d');
+	}
+	if (ev.key === 'ArrowUp') {
+		annotate.selectLabel('u');
+	}if (ev.key === 'ArrowLeft') {
+		annotate.selectLabel('l');
+	}if (ev.key === 'ArrowRight') {
+		annotate.selectLabel('r');
+	} if (ev.ctrlKey && (ev.key === 'z' || ev.key === 'Z')) {
+		annotate.undo();
+	}
 	console.log(ev.key);
 })
 

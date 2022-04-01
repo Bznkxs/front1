@@ -26,7 +26,12 @@ function parseLabel(labelBase64) {
     let x = atob(labelBase64);
 
     let split1 = x.split(/\n+\s*/);
-    // console.log(x);
+    if (x.length > 200) {
+        console.log(x.substring(0, 200) + '...');
+    } else {
+        console.log(x)
+    }
+
     let labels = [];
     for (let i in split1) {
         if (split1[i] === '') {
@@ -59,6 +64,8 @@ function parseLabel(labelBase64) {
         return true;
     }
     labels.sort((a, b) => {
+        if (a.class < b.class) return -1;
+        if (b.class < a.class) return 1;
         let ac = a.coords, bc = b.coords;
         if (rightOf(ac, bc)) return -1;
         if (rightOf(bc, ac)) return 1;
@@ -122,9 +129,15 @@ function init_user(request, user, callback) {
                     task: data.task,
                     tasks: data.tasks,
                     index: data.index,
-                    len: data.len
+                    len: data.len,
+                    permission: data.permission
                 });
             }
+        }
+        if (request.status === 502) {
+            document.getElementById('maskbox').style.display = "block";
+            document.getElementById('backend').style.setProperty('visibility', 'visible');
+
         }
     }
 }

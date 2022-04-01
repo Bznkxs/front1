@@ -65,7 +65,9 @@
                 </div>
             </div>
         </div>
+
     </div>
+
 
     <div class="canvasMain">
         <!--标注功能工具集-->
@@ -90,6 +92,18 @@
 <!--                <p></p>-->
 <!--                <p></p>-->
 <!--            </div>-->
+        </div>
+        <div class="labelSelector">
+            <div class="labelContainer labelNormal">
+                <div class="labelCircle" style="background: #ff0000;"></div>
+                <div class="labelName">0</div>
+                <div class="labelTick"></div>
+
+                <div class="labelVisibility"></div>
+                <div class="labelMask"></div>
+
+            </div>
+
         </div>
         <div class="canvasContent">
             <canvas id="canvas"></canvas>
@@ -164,7 +178,7 @@
             </div>
             <div class="closeLabelManage"><span class="icon-remove-sign"></span></div>
         </div>
-        <div class="taskManage">
+        <div class="taskManage init">
             <div style="text-align: center">Tasks</div>
             <ul class="task-ul">
             </ul>
@@ -175,21 +189,24 @@
         </div>
     </div>
 
-    <div class="mask_box" hidden></div>
+    <div class="mask_box" id="maskbox" hidden></div>
     <div class="loading_box" hidden id="loading">
         <div class="loaderSpinner">
             <span class="icon-spinner"></span>
         </div>
         <b class="closes"></b>
     </div>
+    <div class="backend-no-response-box" id="backend">
+        后端繁忙，请稍候刷新。
+            </div>
 </div>
 
 <script src="./js/connection.js"></script>
 <script src="./js/preloader.js"></script>
-<script src="./colorPicker/colorPicker.js"></script>
+<script src="js/colorPicker.js"></script>
 <script src="./js/webAnnotate.js"></script>
 <script src="./js/operator.js"></script>
-<script src="./js/geometry.js"></script>
+<script src="js/algorithms.js"></script>
 
 </body>
 </html>
