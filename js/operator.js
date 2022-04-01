@@ -127,7 +127,7 @@ function setImage(fromMemory=false) {
 	let name = imgArray[imgIndex].name;
 	taskName.innerText = name;
 	console.log("setImage", name);
-	let content = getStorage(name);
+	let content = null; // getStorage(name);
 	// console.log('content', content);
 	let img = imgArray[imgIndex];
 	fromMemory && content ? annotate.SetImage(img, JSON.parse(content)) :
@@ -159,6 +159,7 @@ async function selectImage(index, prev=0, render=true) {
 		// send information to web
 		console.log('imgIndex', imgIndex)
 		if (prev === 0) {
+
 			uploadImage();
 		}
 
@@ -227,6 +228,7 @@ function initCallback(ret_data){
 	}
 
 			imgArray[imgIndex] = ret_data.image;
+		console.log(ret_data.image.label)
 		task = ret_data.task;
 		userDiv.innerText = ret_data.user+ '@' + task ;
 		tasks = ret_data.tasks;
@@ -258,7 +260,7 @@ function initImage() {
 // 获取下一张图片
 let getNextImage = function() {
 	//annotate.Arrays.imageAnnotateMemory.length > 0 &&
-	setStorage(taskName.textContent, JSON.stringify(annotate.Arrays.imageAnnotateMemory));  // 保存已标定的图片信息
+
 	console.log("next Btn");
 	selectImage(imgIndex + 1);
 }
@@ -267,7 +269,7 @@ nextBtn.onclick = getNextImage;
 
 let getPrevImage = function() {
 	//annotate.Arrays.imageAnnotateMemory.length > 0 &&
-	setStorage(taskName.textContent, JSON.stringify(annotate.Arrays.imageAnnotateMemory));  // 保存已标定的图片信息
+	//setStorage(taskName.textContent, JSON.stringify(annotate.Arrays.imageAnnotateMemory));  // 保存已标定的图片信息
 	console.log("prev Btn");
 	if (imgIndex === 0) {
 		selectImage(imgSum() - 1);

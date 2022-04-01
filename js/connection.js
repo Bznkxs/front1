@@ -75,7 +75,7 @@ function parseLabel(labelBase64) {
 
         return ac[1]-bc[1];
     })
-    // console.log("label =", labels)
+    console.log("label =", labels)
     return labels;
 }
 
@@ -101,12 +101,17 @@ function readImageFromWebData(image) {
     let ret = null;
     if (image.valid === 1) {
         console.log("valid,", "(label marked) =", image.label.marked)
+        console.log("image.label.original =", image.label.original)
+
         let labelOriginal = parseLabel(image.label.original);
         let labelMarked = image.label.marked;
         let labelLatest = null;
         if (labelMarked) {
             labelLatest = parseLabel(image.label.latest);
         }
+        console.log("label:")
+        console.log(labelOriginal)
+        console.log(labelLatest)
         ret = parseImage(image.name, image.image,
             {marked: labelMarked, original: labelOriginal, latest: labelLatest}, image.size);
     } else {
