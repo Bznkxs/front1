@@ -131,7 +131,7 @@ function setImage(fromMemory=false) {
 	let name = imgArray[imgIndex].name;
 	taskName.innerText = name;
 	console.log("setImage", name);
-	let content = null; // getStorage(name);
+	let content = imgArray[imgIndex].savedContent;
 	// console.log('content', content);
 	let img = imgArray[imgIndex];
 	fromMemory && content ? annotate.SetImage(img, JSON.parse(content)) :
@@ -145,6 +145,7 @@ function uploadImage(showSaveDiv=true) {
 	let oldName = imgArray[imgIndex].name;
 	let size = imgArray[imgIndex].size;
 	let content = annotate.Arrays.imageAnnotateMemory;
+	imgArray[imgIndex].savedContent = JSON.stringify(content);
 	sendAnnotation(oldName, content, size);
 	if (showSaveDiv) {
 		saveDiv.classList.remove("init");
