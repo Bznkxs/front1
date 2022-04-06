@@ -392,6 +392,18 @@ body,html{
     padding-top: 12px;
     display: none;
 }
+.generalFeatures .readOnly {
+    padding-top: 12px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+.generalFeatures .readOnly input {
+    margin: 0;
+}
+.generalFeatures .readOnly span {
+    margin-top: 8px;
+}
 .generalFeatures .crossLine {
     padding-top: 12px;
     -webkit-box-sizing: border-box;
@@ -549,7 +561,7 @@ body,html{
     line-height: 36px;
     text-align: center;
 }
-.toolFeatures .toolSet:hover {
+.toolFeatures .toolSet:not(.nohover):hover {
     background: #767a84;
     color: #fff;
 }
@@ -563,7 +575,7 @@ body,html{
 .toolFeatures .toolDrag.focus {
     background: #757a84 url(../images/toolIcons.png) no-repeat -96px -768px;
 }
-.toolFeatures .toolDrag:hover {
+.toolFeatures .toolDrag:not(.nohover):hover {
     background: #757a84 url(../images/toolIcons.png) no-repeat -96px -768px;
 }
 .toolFeatures .toolSegment {
@@ -581,7 +593,7 @@ body,html{
 .toolFeatures .toolRect.focus {
     background: #757a84 url(../images/toolIcons.png) no-repeat -96px -960px;
 }
-.toolFeatures .toolRect:hover {
+.toolFeatures .toolRect:not(.nohover):hover {
     background: #757a84 url(../images/toolIcons.png) no-repeat -96px -960px;
 }
 .toolFeatures .toolPolygon {
@@ -706,6 +718,22 @@ body,html{
     display: inherit;
     right: 90px;
 }
+
+.probThreshold {
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+
+}
+
+.slide {
+    width: 90%;
+    margin-left: 5%;
+    height: 70%;
+    margin-top: 2%;
+
+}
+
 .commentResult .resultArea .resultGroup {
     flex: auto;
     height: 0;

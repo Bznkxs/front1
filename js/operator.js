@@ -38,6 +38,10 @@ const taskDiv = document.querySelector('.taskManage');
 const taskUL = taskDiv.querySelector('.task-ul');
 const saveDiv = document.querySelector('.saveHint');
 const removeRange = document.querySelector('.toolRemoveRange');
+const readOnlyDiv = document.querySelector('.readOnly');
+let readOnly = readOnlyDiv;
+
+let probThreshold = 0;
 
 let taskDivClicked = false;
 taskDiv.addEventListener('mouseleave', ()=>{
@@ -136,6 +140,8 @@ function setImage(fromMemory=false) {
 }
 
 function uploadImage(showSaveDiv=true) {
+	if (readOnly)
+		return;
 	let oldName = imgArray[imgIndex].name;
 	let size = imgArray[imgIndex].size;
 	let content = annotate.Arrays.imageAnnotateMemory;
@@ -290,6 +296,9 @@ tool.addEventListener('click', function(e) {
 
 
 let toolClick = function(target) {
+	if (readOnly && target.className.indexOf('toolDrag') === -1) {
+		return;
+	}
 	for (let i=0; i<tool.children.length; i++) {
 		tool.children[i].classList.remove('focus');
 	}
@@ -421,3 +430,46 @@ function openBox (e, isOpen) {
 		el.style.display = "none";
 	}
 }
+
+flipReadOnly(readOnlyDiv.childNodes[1].checked);
+
+function flipReadOnly(specificValue) {
+	if (specificValue != null)
+		readOnly = specificValue;
+	else
+		readOnly = !readOnly;
+	readOnlyDiv.childNodes[1].checked = readOnly;
+	if (readOnly) {
+		console.log("read only mode on", readOnly)
+		toolClick(tool.getElementsByClassName('toolDrag')[0]);
+		removeRange.disabled = true;
+		removeRange.classList.remove('nohover');
+		tool.querySelector('.toolRect').disabled = true;
+	} else {
+		console.log("read only mode off", readOnly)
+		removeRange.disabled = false;
+		tool.querySelector('.toolRect').disabled = false;
+		tool.classList.add('nohover');
+		annotate.Arrays.selectIndex = -1;
+	}
+}
+readOnlyDiv.addEventListener('click', ()=>{
+	console.log("readOnly click")
+	flipReadOnly();
+})
+
+let probSlider = document.querySelector('.slide');
+let probTitle = document.getElementById('thresholdTitle');
+
+let updateProb = function(prob) {
+	// console.log("on change");
+	probTitle.innerText = "概率阈值:" + prob;
+	probSlider.title = prob;
+	probThreshold = +prob / 100;
+	try {
+		annotate.DrawSavedAnnotateInfoToShow();
+	} catch (e) {}
+}
+
+probSlider.oninput = function(){updateProb(this.value)}
+updateProb(probSlider.value);

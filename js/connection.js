@@ -27,7 +27,7 @@ function parseLabel(labelBase64) {
 
     let split1 = x.split(/\n+\s*/);
     if (x.length > 200) {
-        console.log(x.substring(0, 200) + '...');
+        console.log(x);
     } else {
         console.log(x)
     }
@@ -37,6 +37,7 @@ function parseLabel(labelBase64) {
         if (split1[i] === '') {
             continue;
         }
+        split1[i] = split1[i].replace(/^\s+|\s+$/g, '')
         let line = split1[i].split(/\s+/);
         let id = i;
         let cls = line[0];
@@ -48,11 +49,16 @@ function parseLabel(labelBase64) {
         if (line.length > 5) {
             prob = +line[5];
         }
+        let angle = 0;
+        if (line.length > 7) {
+            angle = +line[7];
+        }
         labels.push({
             id,
             class: cls,
             coords,
-            prob
+            prob,
+            angle
         });
     }
     let below = (a, b) => {  // a is below b

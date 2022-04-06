@@ -46,6 +46,10 @@
                         <i class="bg"></i>
                         <span>恢复</span>
                     </p>
+                    <p class="featureList readOnly" title="只读开关">
+                        <input class="mui-switch mui-switch-anim" type="checkbox">
+                        <span>只读</span>
+                    </p>
                     <p class="featureList crossLine" title="十字线开关">
                         <input class="mui-switch mui-switch-anim" type="checkbox">
                         <span>十字线</span>
@@ -75,8 +79,11 @@
             <div class="assistFeatures">
 <!--                <p class="openFolder" title="打开文件夹"></p>-->
                 <p class="saveJson" title="发送标注结果到服务器(快捷键：Ctrl+S)"></p>
+
                 <input class="openFolderInput" type="file" multiple onchange="changeFolder(this)" hidden>
             </div>
+
+
             <div class="separator"></div>
             <div id="tools">
                 <div class="toolSet toolDrag focus" title="图片拖拽(快捷键：D)"></div>
@@ -128,12 +135,19 @@
                 <div class="resultGroup">
                 </div>
                 <!--    选择标签操作    -->
-                <div class="resultSelectLabel">
-                    <p class="selectLabelTip" hidden>请先创建标签</p>
-                    <ul class="selectLabel-ul">
-                    </ul>
-                    <div class="closeLabelManage"><span class="icon-remove-sign"></span></div>
-                </div>
+
+
+            </div>
+            <div class="resultSelectLabel">
+                <p class="selectLabelTip" hidden>请先创建标签</p>
+                <ul class="selectLabel-ul">
+                </ul>
+                <div class="closeLabelManage"><span class="icon-remove-sign"></span></div>
+            </div>
+            <div class="probThreshold">
+                <p id="thresholdTitle" style="font-size: 13px; color: white; padding-left: 5%; width: 100%; background: #212d3f;
+border-top: #555566 solid 1px; border-bottom: #555566 solid 1px; padding-top: 3px; padding-bottom: 4px;">概率阈值</p>
+                <input type="range" min="0" max="100" value="50" title="50" class="slide">
             </div>
             <div class="historyContent">
                 <p class="title">历史记录</p>
